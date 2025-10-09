@@ -16,8 +16,12 @@ namespace Worker
         {
             try
             {
-                var pgsql = OpenDbConnection("Server=db;Username=postgres;Password=postgres;");
-                var redisConn = OpenRedisConnection("redis");
+                string db_host = Environment.GetEnvironmentVariable("DB_HOST");
+                string db_user = Environment.GetEnvironmentVariable("DB_USER");
+                string db_pass = Environment.GetEnvironmentVariable("DB_PASS");
+                string redis_host = Environment.GetEnvironmentVariable("REDIS_HOST");
+                var pgsql = OpenDbConnection($"Server={db_host};Username={db_user};Password={db_pass};Database=voting_data;SslMode=Prefer;Trust Server Certificate=true;");
+                var redisConn = OpenRedisConnection(redis_host);
                 var redis = redisConn.GetDatabase();
 
                 // Keep alive is not implemented in Npgsql yet. This workaround was recommended:
@@ -34,7 +38,7 @@ namespace Worker
                     // Reconnect redis if down
                     if (redisConn == null || !redisConn.IsConnected) {
                         Console.WriteLine("Reconnecting Redis");
-                        redisConn = OpenRedisConnection("redis");
+                        redisConn = OpenRedisConnection(redis_host);
                         redis = redisConn.GetDatabase();
                     }
                     string json = redis.ListLeftPopAsync("votes").Result;
@@ -46,7 +50,7 @@ namespace Worker
                         if (!pgsql.State.Equals(System.Data.ConnectionState.Open))
                         {
                             Console.WriteLine("Reconnecting DB");
-                            pgsql = OpenDbConnection("Server=db;Username=postgres;Password=postgres;");
+                            pgsql = OpenDbConnection($"Server={db_host};Username={db_user};Password={db_pass};Database=data_vote;SslMode=Prefer;Trust Server Certificate=true;");
                         }
                         else
                         { // Normal +1 vote requested
@@ -93,10 +97,7 @@ namespace Worker
             Console.Error.WriteLine("Connected to db");
 
             var command = connection.CreateCommand();
-            command.CommandText = @"CREATE TABLE IF NOT EXISTS votes (
-                                        id VARCHAR(255) NOT NULL UNIQUE,
-                                        vote VARCHAR(255) NOT NULL
-                                    )";
+            command.CommandText = "CREATE TABLE IF NOT EXISTS votes (id VARCHAR(255) NOT NULL UNIQUE, vote VARCHAR(255) NOT NULL)";
             command.ExecuteNonQuery();
 
             return connection;
