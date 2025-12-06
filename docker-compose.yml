@@ -4,7 +4,7 @@ services:
     build:
       context: ./vote
       target: dev
-    image: 791045538644.dkr.ecr.us-east-1.amazonaws.com/vote:01
+    image: 791045538644.dkr.ecr.us-east-1.amazonaws.com/vote:0.1
 #Menyatakan env untuk container dari service vote
     environment:
       - REDIS_HOST=redis
@@ -35,7 +35,7 @@ services:
   result:
 #Membuat image dari folder result
     build: ./result
-    image: 791045538644.dkr.ecr.us-east-1.amazonaws.com/result:01
+    image: 791045538644.dkr.ecr.us-east-1.amazonaws.com/result:0.1
 #Command ketika pertama kali container dijalankan
     entrypoint: nodemon --inspect=0.0.0.0 server.js
 #Menyatakan env 
@@ -68,7 +68,7 @@ services:
 #Membuat image dari folder worker
     build:
       context: ./worker
-    image: 791045538644.dkr.ecr.us-east-1.amazonaws.com/worker:01
+    image: 791045538644.dkr.ecr.us-east-1.amazonaws.com/worker:0.1
 #Menyatakan env
     environment:
       - REDIS_HOST=redis
